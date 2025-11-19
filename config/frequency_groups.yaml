@@ -1,0 +1,169 @@
+# TrendRadar 频率词组配置文件（YAML格式）
+# 
+# 配置说明：
+# - title: 词组的显示标题（在报告中显示）
+# - required: 必须词列表（标题中必须包含这些词才匹配）
+# - normal: 普通词列表（标题中至少包含一个即可匹配）
+# - filter: 过滤词列表（包含这些词的标题将被排除）
+#
+# 注意：
+# 1. required 和 normal 至少要有一个非空
+# 2. 如果同时有 required 和 normal，则必须满足：所有 required 词都存在 且 至少一个 normal 词存在
+# 3. filter 词会在所有匹配前进行过滤
+
+word_groups:
+  - title: "AI编程工具"
+    required: []
+    normal:
+      - "AI Coding"
+      - "Vibe Coding"
+      - "Coding Agent"
+      - "Agent Coding"
+      - "Cursor"
+      - "Claude Code"
+    filter: []
+
+  - title: "前端技术"
+    required: []
+    normal:
+      - "前端"
+      - "Javascript"
+      - "React"
+      - "Vue"
+      - "Angular"
+      - "Node"
+    filter: []
+
+  - title: "DeepSeek & 梁文锋"
+    required: []
+    normal:
+      - "DeepSeek"
+      - "梁文锋"
+    filter: []
+
+  - title: "大疆科技"
+    required: []
+    normal:
+      - "大疆"
+      - "DJI"
+    filter: []
+
+  - title: "宇树科技"
+    required: []
+    normal:
+      - "宇树"
+      - "王兴兴"
+    filter: []
+
+  - title: "京东集团"
+    required: []
+    normal:
+      - "京东"
+      - "刘强东"
+    filter: []
+
+  - title: "字节跳动"
+    required: []
+    normal:
+      - "字节"
+      - "bytedance"
+      - "张一鸣"
+    filter: []
+
+  - title: "微软公司"
+    required: []
+    normal:
+      - "微软"
+      - "Microsoft"
+    filter: []
+
+  - title: "英伟达"
+    required: []
+    normal:
+      - "英伟达"
+      - "NVIDIA"
+      - "黄仁勋"
+    filter: []
+
+  - title: "AMD"
+    required: []
+    normal:
+      - "AMD"
+    filter: []
+
+  - title: "谷歌 & Gemini"
+    required: []
+    normal:
+      - "谷歌"
+      - "google"
+      - "gemini"
+      - "deepmind"
+    filter: []
+
+  - title: "OpenAI & ChatGPT"
+    required: []
+    normal:
+      - "chatgpt"
+      - "openai"
+      - "sora"
+    filter: []
+
+  - title: "Claude & Anthropic"
+    required: []
+    normal:
+      - "claude"
+      - "Anthropic"
+    filter: []
+
+  - title: "苹果产品"
+    required: []
+    normal:
+      - "iphone"
+      - "ipad"
+      - "mac"
+      - "ios"
+    filter: []
+
+  - title: "人工智能"
+    required: []
+    normal:
+      - "ai"
+      - "人工智能"
+    filter:
+      - "gai"
+
+  - title: "自动驾驶"
+    required: []
+    normal:
+      - "自动驾驶"
+    filter: []
+
+  - title: "芯片 & 光刻机"
+    required: []
+    normal:
+      - "芯片"
+      - "光刻机"
+    filter: []
+
+  - title: "科技"
+    required: []
+    normal:
+      - "科技"
+    filter: []
+
+  - title: "新质生产力"
+    required: []
+    normal:
+      - "新质生产力"
+    filter: []
+
+  - title: "航天航空"
+    required: []
+    normal:
+      - "月球"
+      - "登月"
+      - "火星"
+      - "宇宙"
+      - "飞船"
+      - "航空"
+    filter: []

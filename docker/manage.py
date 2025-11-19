@@ -155,13 +155,29 @@ def show_status():
     print(f"    IMMEDIATE_RUN: {immediate_run}")
 
     # 检查配置文件
-    config_files = ["/app/config/config.yaml", "/app/config/frequency_words.txt"]
+    config_files = [
+        "/app/config/config.yaml",
+        "/app/config/frequency_groups.yaml",
+        "/app/config/frequency_words.txt"
+    ]
     print("  📁 配置文件:")
     for file_path in config_files:
         if Path(file_path).exists():
             print(f"    ✅ {Path(file_path).name}")
         else:
-            print(f"    ❌ {Path(file_path).name} 缺失")
+            # frequency_groups.yaml 和 frequency_words.txt 至少要有一个
+            if "frequency" in file_path:
+                print(f"    ⚠️  {Path(file_path).name} 不存在")
+            else:
+                print(f"    ❌ {Path(file_path).name} 缺失")
+    
+    # 检查频率词配置
+    has_freq_config = (
+        Path("/app/config/frequency_groups.yaml").exists() or
+        Path("/app/config/frequency_words.txt").exists()
+    )
+    if not has_freq_config:
+        print("    ❌ 错误：必须配置 frequency_groups.yaml 或 frequency_words.txt")
 
     # 检查关键文件
     key_files = [

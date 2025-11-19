@@ -1949,7 +1949,7 @@ flowchart TD
     
     E --> F[🔑 填写通知参数<br/>GitHub Secrets 或环境变量]
     
-    F --> G[📝 配置关键词<br/>config/frequency_words.txt<br/>普通词/必须词+/过滤词!]
+    F --> G[📝 配置关键词<br/>推荐: config/frequency_groups.yaml<br/>兼容: config/frequency_words.txt]
     
     G --> H[🎯 选择运行模式<br/>config/config.yaml]
     

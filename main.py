@@ -670,20 +670,82 @@ def save_titles_to_file(results: Dict, id_to_name: Dict, failed_ids: List) -> st
     return file_path
 
 
+
 def load_frequency_words(
     frequency_file: Optional[str] = None,
 ) -> Tuple[List[Dict], List[str]]:
-    """加载频率词配置"""
-    if frequency_file is None:
-        frequency_file = os.environ.get(
-            "FREQUENCY_WORDS_PATH", "config/frequency_words.txt"
-        )
+    """加载频率词配置
+    
+    优先加载 YAML 格式的 frequency_groups.yaml，
+    如果不存在则回退到旧格式的 frequency_words.txt
+    """
+    # 如果用户指定了文件路径，使用指定路径
+    if frequency_file is not None:
+        frequency_path = Path(frequency_file)
+        if not frequency_path.exists():
+            raise FileNotFoundError(f"频率词文件 {frequency_file} 不存在")
+        
+        # 根据文件扩展名判断格式
+        if frequency_path.suffix.lower() in ['.yaml', '.yml']:
+            return _load_yaml_frequency_words(frequency_path)
+        else:
+            return _load_txt_frequency_words(frequency_path)
+    
+    # 未指定文件路径时，优先尝试 YAML 格式
+    yaml_path = Path("config/frequency_groups.yaml")
+    if yaml_path.exists():
+        return _load_yaml_frequency_words(yaml_path)
+    
+    # YAML 不存在则使用旧的 TXT 格式
+    txt_path = Path(os.environ.get("FREQUENCY_WORDS_PATH", "config/frequency_words.txt"))
+    if txt_path.exists():
+        return _load_txt_frequency_words(txt_path)
+    
+    raise FileNotFoundError("未找到频率词配置文件 (frequency_groups.yaml 或 frequency_words.txt)")
 
-    frequency_path = Path(frequency_file)
-    if not frequency_path.exists():
-        raise FileNotFoundError(f"频率词文件 {frequency_file} 不存在")
 
-    with open(frequency_path, "r", encoding="utf-8") as f:
+def _load_yaml_frequency_words(file_path: Path) -> Tuple[List[Dict], List[str]]:
+    """加载 YAML 格式的频率词配置"""
+    import yaml
+    
+    with open(file_path, "r", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+    
+    if not config or "word_groups" not in config:
+        return [], []
+    
+    processed_groups = []
+    filter_words = []
+    
+    for group in config["word_groups"]:
+        title = group.get("title", "")
+        required = group.get("required", [])
+        normal = group.get("normal", [])
+        group_filter = group.get("filter", [])
+        
+        # 收集全局过滤词
+        filter_words.extend(group_filter)
+        
+        if required or normal:
+            # 生成 group_key（用于兼容性，如果没有 title 时使用）
+            if normal:
+                group_key = " ".join(normal)
+            else:
+                group_key = " ".join(required)
+            
+            processed_groups.append({
+                "title": title,
+                "required": required,
+                "normal": normal,
+                "group_key": group_key,
+            })
+    
+    return processed_groups, filter_words
+
+
+def _load_txt_frequency_words(file_path: Path) -> Tuple[List[Dict], List[str]]:
+    """加载旧格式 TXT 的频率词配置（兼容性）"""
+    with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
 
     word_groups = [group.strip() for group in content.split("\n\n") if group.strip()]
@@ -713,13 +775,12 @@ def load_frequency_words(
             else:
                 group_key = " ".join(group_required_words)
 
-            processed_groups.append(
-                {
-                    "required": group_required_words,
-                    "normal": group_normal_words,
-                    "group_key": group_key,
-                }
-            )
+            processed_groups.append({
+                "title": "",  # 旧格式没有 title
+                "required": group_required_words,
+                "normal": group_normal_words,
+                "group_key": group_key,
+            })
 
     return processed_groups, filter_words
 
@@ -1184,7 +1245,13 @@ def count_word_frequency(
 
     for group in word_groups:
         group_key = group["group_key"]
-        word_stats[group_key] = {"count": 0, "titles": {}}
+        # 优先使用 title 作为显示名称，如果没有则使用 group_key
+        display_name = group.get("title", "") or group_key
+        word_stats[group_key] = {
+            "count": 0,
+            "titles": {},
+            "display_name": display_name
+        }
 
     for source_id, titles_data in results_to_process.items():
         total_titles += len(titles_data)
@@ -1392,7 +1459,7 @@ def count_word_frequency(
 
         stats.append(
             {
-                "word": group_key,
+                "word": data.get("display_name", group_key),  # 优先使用 display_name（来自 title）
                 "count": data["count"],
                 "titles": sorted_titles,
                 "percentage": (
@@ -4668,7 +4735,7 @@ def main():
         print(f"❌ 配置文件错误: {e}")
         print("\n请确保以下文件存在:")
         print("  • config/config.yaml")
-        print("  • config/frequency_words.txt")
+        print("  • config/frequency_groups.yaml (推荐) 或 config/frequency_words.txt")
         print("\n参考项目文档进行正确配置")
     except Exception as e:
         print(f"❌ 程序运行错误: {e}")

@@ -290,9 +290,12 @@ class ParserService:
     def parse_frequency_words(self, words_file: str = None) -> List[Dict]:
         """
         解析关键词配置文件
+        
+        优先加载 YAML 格式的 frequency_groups.yaml，
+        如果不存在则回退到旧格式的 frequency_words.txt
 
         Args:
-            words_file: 关键词文件路径，默认为 config/frequency_words.txt
+            words_file: 关键词文件路径，默认优先尝试 config/frequency_groups.yaml
 
         Returns:
             词组列表
@@ -300,18 +303,67 @@ class ParserService:
         Raises:
             FileParseError: 文件解析错误
         """
-        if words_file is None:
-            words_file = self.project_root / "config" / "frequency_words.txt"
-        else:
+        # 如果用户指定了文件路径，使用指定路径
+        if words_file is not None:
             words_file = Path(words_file)
+            if not words_file.exists():
+                return []
+            
+            # 根据文件扩展名判断格式
+            if words_file.suffix.lower() in ['.yaml', '.yml']:
+                return self._parse_yaml_frequency_words(words_file)
+            else:
+                return self._parse_txt_frequency_words(words_file)
+        
+        # 未指定文件路径时，优先尝试 YAML 格式
+        yaml_path = self.project_root / "config" / "frequency_groups.yaml"
+        if yaml_path.exists():
+            return self._parse_yaml_frequency_words(yaml_path)
+        
+        # YAML 不存在则使用旧的 TXT 格式
+        txt_path = self.project_root / "config" / "frequency_words.txt"
+        if txt_path.exists():
+            return self._parse_txt_frequency_words(txt_path)
+        
+        return []
 
-        if not words_file.exists():
-            return []
+    def _parse_yaml_frequency_words(self, file_path: Path) -> List[Dict]:
+        """解析 YAML 格式的频率词配置"""
+        import yaml
+        
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                config = yaml.safe_load(f)
+            
+            if not config or "word_groups" not in config:
+                return []
+            
+            word_groups = []
+            for group in config["word_groups"]:
+                title = group.get("title", "")
+                required = group.get("required", [])
+                normal = group.get("normal", [])
+                filter_words = group.get("filter", [])
+                
+                if required or normal:
+                    word_groups.append({
+                        "title": title,
+                        "required": required,
+                        "normal": normal,
+                        "filter_words": filter_words
+                    })
+            
+            return word_groups
+            
+        except Exception as e:
+            raise FileParseError(str(file_path), str(e))
 
+    def _parse_txt_frequency_words(self, file_path: Path) -> List[Dict]:
+        """解析旧格式 TXT 的频率词配置（兼容性）"""
         word_groups = []
 
         try:
-            with open(words_file, "r", encoding="utf-8") as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line or line.startswith("#"):
@@ -323,6 +375,7 @@ class ParserService:
                         continue
 
                     group = {
+                        "title": "",  # 旧格式没有 title
                         "required": [],
                         "normal": [],
                         "filter_words": []
@@ -350,6 +403,6 @@ class ParserService:
                         word_groups.append(group)
 
         except Exception as e:
-            raise FileParseError(str(words_file), str(e))
+            raise FileParseError(str(file_path), str(e))
 
         return word_groups
