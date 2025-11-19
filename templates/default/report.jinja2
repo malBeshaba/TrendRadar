@@ -1,0 +1,92 @@
+{# VSCode: Disable CSS/JS validation for Jinja2 templates #}
+{% extends "base.jinja2" %}
+
+{% block styles %}
+<style>
+    {% include 'default/assets/styles.css' %}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    {# 报告头部 #}
+    {% include 'default/components/header.jinja2' %}
+    
+    <div class="content">
+        {# 错误信息区域 #}
+        {% if failed_ids %}
+        <div class="error-section">
+            <div class="error-title">⚠️ 请求失败的平台</div>
+            <ul class="error-list">
+                {% for id_value in failed_ids %}
+                <li class="error-item">{{ id_value }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        {# 主要统计数据 #}
+        {% include 'default/components/stats.jinja2' %}
+        
+        {# 新增新闻区域 #}
+        {% if new_titles %}
+        <div class="new-section">
+            <div class="new-section-title">本次新增热点 (共 {{ total_new_count }} 条)</div>
+            {% for source_data in new_titles %}
+            <div class="new-source-group">
+                <div class="new-source-title">{{ source_data.source_name }} · {{ source_data.titles|length }}条</div>
+                {% for title_data in source_data.titles %}
+                <div class="new-item">
+                    <div class="new-item-number">{{ loop.index }}</div>
+                    
+                    {# 处理新增新闻的排名显示 #}
+                    {% set ranks = title_data.get('ranks', []) %}
+                    {% if ranks %}
+                        {% set min_rank = ranks|min %}
+                        {% if min_rank <= 3 %}
+                            {% set rank_class = "top" %}
+                        {% elif min_rank <= title_data.get('rank_threshold', 10) %}
+                            {% set rank_class = "high" %}
+                        {% else %}
+                            {% set rank_class = "" %}
+                        {% endif %}
+                        
+                        {% if ranks|length == 1 %}
+                            {% set rank_text = ranks[0]|string %}
+                        {% else %}
+                            {% set rank_text = "{}-{}".format(ranks|min, ranks|max) %}
+                        {% endif %}
+                    {% else %}
+                        {% set rank_class = "" %}
+                        {% set rank_text = "?" %}
+                    {% endif %}
+                    
+                    <div class="new-item-rank {{ rank_class }}">{{ rank_text }}</div>
+                    <div class="new-item-content">
+                        <div class="new-item-title">
+                            {% set link_url = title_data.get('mobile_url') or title_data.get('url', '') %}
+                            {% if link_url %}
+                                <a href="{{ link_url }}" target="_blank" class="news-link">{{ title_data.title }}</a>
+                            {% else %}
+                                {{ title_data.title }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    
+    {# 页脚 #}
+    {% include 'default/components/footer.jinja2' %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    {% include 'default/assets/scripts.js' %}
+</script>
+{% endblock %}

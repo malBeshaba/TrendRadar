@@ -28,6 +28,11 @@ report:
   mode: "daily" # 可选: "daily"|"incremental"|"current"
   rank_threshold: 5 # 排名高亮阈值
 
+# 模板配置
+template:
+  theme: "default" # 主题名称，可选: "default"|"simple" 或自定义主题
+  custom_css: "" # 自定义CSS文件路径（可选）
+
 notification:
   enable_notification: true # 是否启用通知功能，如果 false，则不发送手机通知
   message_batch_size: 4000 # 消息分批大小（字节）(这个配置别动)
@@ -77,6 +82,12 @@ weight:
 
 # name 可以定义任意名称，只具有显示作用，即使项目运行了几天后，忽然改掉 name 也不会影响代码的正常运行
 platforms:
+  - id: "github"
+    name: "GitHub"
+  - id: "hackernews"
+    name: "Hacker News"
+  - id: "producthunt"
+    name: "Product Hunt"
   - id: "toutiao"
     name: "今日头条"
   - id: "baidu"

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}热点新闻分析{% endblock %}</title>
+    
+    {# html2canvas CDN #}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" 
+            integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" 
+            crossorigin="anonymous" 
+            referrerpolicy="no-referrer"></script>
+    
+    {# 样式文件 #}
+    {% block styles %}{% endblock %}
+    
+    {# 自定义样式 #}
+    {% if custom_css %}
+    <link rel="stylesheet" href="{{ custom_css }}">
+    {% endif %}
+</head>
+<body>
+    {% block body %}{% endblock %}
+    
+    {# 脚本文件 #}
+    {% block scripts %}{% endblock %}
+</body>
+</html>

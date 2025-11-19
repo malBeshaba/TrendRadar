@@ -1,0 +1,58 @@
+{# 单条新闻项组件 #}
+{% set is_new = title_data.get('is_new', False) %}
+{% set item_index = loop.index %}
+<div class="news-item {% if is_new %}new{% endif %}">
+    <div class="news-number">{{ item_index }}</div>
+    <div class="news-content">
+        <div class="news-header">
+            <span class="source-name">{{ title_data.source_name }}</span>
+            
+            {# 处理排名显示 #}
+            {% set ranks = title_data.get('ranks', []) %}
+            {% if ranks %}
+                {% set min_rank = ranks|min %}
+                {% set max_rank = ranks|max %}
+                {% set rank_threshold = title_data.get('rank_threshold', 10) %}
+                
+                {# 确定排名等级 #}
+                {% if min_rank <= 3 %}
+                    {% set rank_class = "top" %}
+                {% elif min_rank <= rank_threshold %}
+                    {% set rank_class = "high" %}
+                {% else %}
+                    {% set rank_class = "" %}
+                {% endif %}
+                
+                {% if min_rank == max_rank %}
+                    {% set rank_text = min_rank|string %}
+                {% else %}
+                    {% set rank_text = "{}-{}".format(min_rank, max_rank) %}
+                {% endif %}
+                
+                <span class="rank-num {{ rank_class }}">{{ rank_text }}</span>
+            {% endif %}
+            
+            {# 处理时间显示 #}
+            {% set time_display = title_data.get('time_display', '') %}
+            {% if time_display %}
+                {% set simplified_time = time_display.replace(' ~ ', '~').replace('[', '').replace(']', '') %}
+                <span class="time-info">{{ simplified_time }}</span>
+            {% endif %}
+            
+            {# 处理出现次数 #}
+            {% set count_info = title_data.get('count', 1) %}
+            {% if count_info > 1 %}
+                <span class="count-info">{{ count_info }}次</span>
+            {% endif %}
+        </div>
+        <div class="news-title">
+            {# 处理标题和链接 #}
+            {% set link_url = title_data.get('mobile_url') or title_data.get('url', '') %}
+            {% if link_url %}
+                <a href="{{ link_url }}" target="_blank" class="news-link">{{ title_data.title }}</a>
+            {% else %}
+                {{ title_data.title }}
+            {% endif %}
+        </div>
+    </div>
+</div>

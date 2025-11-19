@@ -1,0 +1,31 @@
+{# 词组统计区域组件 #}
+{% if stats %}
+    {% set total_count = stats|length %}
+    {% for stat in stats %}
+        {% set count = stat.count %}
+        {# 确定热度等级 #}
+        {% if count >= 10 %}
+            {% set count_class = "hot" %}
+        {% elif count >= 5 %}
+            {% set count_class = "warm" %}
+        {% else %}
+            {% set count_class = "" %}
+        {% endif %}
+        
+        <div class="word-group">
+            <div class="word-header">
+                <div class="word-info">
+                    <div class="word-name">{{ stat.word }}</div>
+                    <div class="word-count {{ count_class }}">{{ count }} 条</div>
+                </div>
+                <div class="word-index">{{ loop.index }}/{{ total_count }}</div>
+            </div>
+            
+            {# 渲染该词组下的所有新闻项 #}
+            {% for title_data in stat.titles %}
+                {% set item_index = loop.index %}
+                {% include 'default/components/news_item.jinja2' %}
+            {% endfor %}
+        </div>
+    {% endfor %}
+{% endif %}

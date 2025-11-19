@@ -18,6 +18,7 @@ from typing import Dict, List, Tuple, Optional, Union
 import pytz
 import requests
 import yaml
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
 VERSION = "3.0.5"
@@ -216,6 +217,72 @@ print("正在加载配置...")
 CONFIG = load_config()
 print(f"TrendRadar v{VERSION} 配置加载完成")
 print(f"监控平台数量: {len(CONFIG['PLATFORMS'])}")
+
+
+# === 模板管理 ===
+class TemplateManager:
+    """HTML模板管理类"""
+    
+    def __init__(self, template_dir: str = "templates", theme: str = "default"):
+        """
+        初始化模板管理器
+        
+        Args:
+            template_dir: 模板目录路径
+            theme: 主题名称（default/simple等）
+        """
+        self.template_dir = Path(template_dir)
+        self.theme = theme
+        self.theme_dir = self.template_dir / theme
+        
+        # 初始化Jinja2环境
+        try:
+            self.env = Environment(
+                loader=FileSystemLoader(str(self.template_dir)),
+                autoescape=select_autoescape(['html', 'xml']),
+                trim_blocks=True,
+                lstrip_blocks=True
+            )
+            self.available = True
+            print(f"模板系统初始化成功: {theme} 主题")
+        except Exception as e:
+            print(f"模板系统初始化失败: {e}")
+            self.available = False
+    
+    def render(self, template_name: str, context: Dict) -> str:
+        """
+        渲染模板
+        
+        Args:
+            template_name: 模板名称（相对于主题目录）
+            context: 模板上下文数据
+            
+        Returns:
+            渲染后的HTML字符串
+        """
+        if not self.available:
+            raise RuntimeError("模板系统不可用，请使用旧版渲染函数")
+        
+        # 构建完整的模板路径
+        template_path = f"{self.theme}/{template_name}"
+        
+        try:
+            template = self.env.get_template(template_path)
+            return template.render(**context)
+        except Exception as e:
+            print(f"模板渲染失败: {e}")
+            raise
+    
+    def is_available(self) -> bool:
+        """检查模板系统是否可用"""
+        return self.available
+
+
+# 初始化全局模板管理器
+def get_template_manager() -> TemplateManager:
+    """获取模板管理器实例"""
+    theme = os.environ.get("TEMPLATE_THEME", "").strip() or CONFIG.get("template", {}).get("theme", "default")
+    return TemplateManager(theme=theme)
 
 
 # === 工具函数 ===
@@ -1642,7 +1709,65 @@ def render_html_content(
     mode: str = "daily",
     update_info: Optional[Dict] = None,
 ) -> str:
-    """渲染HTML内容"""
+    """渲染HTML内容（新版模板系统）"""
+    # 检查是否强制使用旧版模板
+    use_legacy = os.environ.get("USE_LEGACY_TEMPLATE", "").strip().lower() in ("true", "1")
+    
+    if use_legacy:
+        print("使用旧版模板系统")
+        return render_html_content_legacy(report_data, total_titles, is_daily_summary, mode, update_info)
+    
+    # 尝试使用新模板系统
+    try:
+        template_manager = get_template_manager()
+        
+        if not template_manager.is_available():
+            print("模板系统不可用，降级到旧版实现")
+            return render_html_content_legacy(report_data, total_titles, is_daily_summary, mode, update_info)
+        
+        # 准备模板上下文数据
+        context = {
+            # 基础数据
+            'report_data': report_data,
+            'total_titles': total_titles,
+            'is_daily_summary': is_daily_summary,
+            'mode': mode,
+            'update_info': update_info,
+            
+            # 展开report_data中的字段，方便模板访问
+            'stats': report_data.get('stats', []),
+            'failed_ids': report_data.get('failed_ids', []),
+            'new_titles': report_data.get('new_titles', []),
+            'total_new_count': report_data.get('total_new_count', 0),
+            
+            # 计算热点新闻数量
+            'hot_news_count': sum(len(stat['titles']) for stat in report_data.get('stats', [])),
+            
+            # 生成时间
+            'generation_time': get_beijing_time().strftime("%m-%d %H:%M"),
+            
+            # 自定义CSS（如果配置了）
+            'custom_css': CONFIG.get('template', {}).get('custom_css', ''),
+        }
+        
+        # 渲染模板
+        html = template_manager.render('report.jinja2', context)
+        print(f"使用模板系统渲染成功: {template_manager.theme} 主题")
+        return html
+        
+    except Exception as e:
+        print(f"模板渲染失败，降级到旧版实现: {e}")
+        return render_html_content_legacy(report_data, total_titles, is_daily_summary, mode, update_info)
+
+
+def render_html_content_legacy(
+    report_data: Dict,
+    total_titles: int,
+    is_daily_summary: bool = False,
+    mode: str = "daily",
+    update_info: Optional[Dict] = None,
+) -> str:
+    """渲染HTML内容（旧版实现，作为备份）"""
     html = """
     <!DOCTYPE html>
     <html>

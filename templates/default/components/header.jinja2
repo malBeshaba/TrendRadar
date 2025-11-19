@@ -1,0 +1,38 @@
+{# 报告头部组件 #}
+<div class="header">
+    <div class="save-buttons">
+        <button class="save-btn" onclick="saveAsImage()">保存为图片</button>
+        <button class="save-btn" onclick="saveAsMultipleImages()">分段保存</button>
+    </div>
+    <div class="header-title">热点新闻分析</div>
+    <div class="header-info">
+        <div class="info-item">
+            <span class="info-label">报告类型</span>
+            <span class="info-value">
+                {% if is_daily_summary %}
+                    {% if mode == "current" %}
+                        当前榜单
+                    {% elif mode == "incremental" %}
+                        增量模式
+                    {% else %}
+                        当日汇总
+                    {% endif %}
+                {% else %}
+                    实时分析
+                {% endif %}
+            </span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">新闻总数</span>
+            <span class="info-value">{{ total_titles }} 条</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">热点新闻</span>
+            <span class="info-value">{{ hot_news_count }} 条</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">生成时间</span>
+            <span class="info-value">{{ generation_time }}</span>
+        </div>
+    </div>
+</div>
